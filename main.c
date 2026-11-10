@@ -1,3 +1,4 @@
+#define FYLIB_IMPLEMENTATION
 #include "fylib.h"
 
 int main(){
