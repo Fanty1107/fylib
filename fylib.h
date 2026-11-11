@@ -1,6 +1,7 @@
 #ifndef FYLIB_H
 #define FYLIB_H
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -31,14 +32,7 @@ typedef i32 b32;
 #define MiB(n) ((u64)(n) << 20)
 #define GiB(n) ((u64)(n) << 30)
 
-//TODO: string
-typedef struct{ 
-    char *data;
-    size_t length;
-}string;
-
 #define ALIGN_UP_POW2(n,p) (((u64)(n) + ((u64)(p) - 1)) & (~((u64)(p) - 1)))
-
 
 //arena alloc
 typedef struct{
@@ -65,7 +59,7 @@ void arena_pop_to(mem_arena *arena, u64 pos);
 
 u64 arena_get_pos(mem_arena *arena);
 
-#ifdef FYLIB_IMPLEMENTATION
+#ifdef FYLIB_ARENA_IMPLEMENTATION
 
 mem_arena* arena_create(u64 capacity){
     mem_arena* arena = (mem_arena*) malloc(capacity);
@@ -102,9 +96,117 @@ void arena_pop_to(mem_arena *arena, u64 pos){
 void arena_clear(mem_arena *arena){
     arena_pop_to(arena, ARENA_BASE_POS);
 }
-
 #endif
 
+typedef struct{ 
+    char *data;
+    size_t count;
+}string_view;
+
+string_view str_from_cstr(char *cstr);
+char* str_to_cstr(string_view self, mem_arena *arena);
+void str_chop_left(string_view *s, size_t n);
+void str_chop_right(string_view *s, size_t n);
+void str_trim_left(string_view *s);
+void str_trim_right(string_view *s);
+void str_trim(string_view *s);
+string_view str_chop_by_delim(string_view *s, char delim);
+string_view str_chop_by_type(string_view *s, int (*istype)(int c));
+
+#define STR_Fmt "%.*s"
+#define STR_Arg(s) (s).count, (s).data
+
+#ifdef FYLIB_STR_IMPLEMENTATION
+string_view str_from_cstr(char *cstr){
+    if(cstr == NULL){
+        return (string_view){
+            .data = " ",
+            .count = 1,
+        };
+    }
+    return (string_view){
+        .data = cstr,
+        .count = strlen(cstr),
+    };
+}
+char* str_to_cstr(string_view self, mem_arena *arena){
+    char *cstr = arena_push(arena, self.count + 1, true);
+    memcpy(cstr, self.data, self.count);
+    cstr[self.count] = '\0';
+    return cstr;
+}
+void str_chop_left(string_view *s, size_t n){
+    if (n > s->count) n = s->count;
+    s->count -= n;
+    s->data  += n;
+}
+void str_chop_right(string_view *sv, size_t n)
+{
+    if (n > sv->count) n = sv->count;
+    sv->count -= n;
+}
+
+void str_trim_left(string_view *sv)
+{
+    while (sv->count > 0 && isspace(sv->data[0])) {
+        str_chop_left(sv, 1);
+    }
+}
+
+void str_trim_right(string_view *sv)
+{
+    while (sv->count > 0 && isspace(sv->data[sv->count-1])) {
+        str_chop_right(sv, 1);
+    }
+}
+
+void str_trim(string_view *sv)
+{
+    str_trim_left(sv);
+    str_trim_right(sv);
+}
+string_view str_chop_by_delim(string_view *sv, char delim)
+{
+    size_t i = 0;
+    while (i < sv->count && sv->data[i] != delim) {
+        i += 1;
+    }
+
+    if (i < sv->count) {
+        string_view result = {
+            .data = sv->data,
+            .count = i,
+        };
+        str_chop_left(sv, i + 1);
+        return result;
+    }
+
+    string_view result = *sv;
+    str_chop_left(sv, sv->count);
+    return result;
+}
+
+string_view str_chop_by_type(string_view *sv, int (*istype)(int c))
+{
+    size_t i = 0;
+    while (i < sv->count && !istype(sv->data[i])) {
+        i += 1;
+    }
+
+    if (i < sv->count) {
+        string_view result = {
+            .data = sv->data,
+            .count = i,
+        };
+        str_chop_left(sv, i + 1);
+        return result;
+    }
+
+    string_view result = *sv;
+    str_chop_left(sv, sv->count);
+    return result;
+}
+#endif
 //data structs:
 
 typedef struct{
