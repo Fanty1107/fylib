@@ -24,6 +24,29 @@ typedef double f64;
 typedef i8 b8;
 typedef i32 b32;
 
+#define TYPESTR(x) _Generic((x), \
+                        int: "int", \
+                        long: "long", \
+                        float: "float", \
+                        double: "double", \
+                        default: "something else")
+
+// Macro that gives back a format specifier for a type
+#define FMTSPEC(x) _Generic((x), \
+                        int: "%d", \
+                        long: "%ld", \
+                        float: "%f", \
+                        double: "%f", \
+                        char *: "%s")
+                        // TODO: add more types
+                        
+// Macro that prints a variable in the form "name = value"
+#define PRINT_VAL(x) do { \
+    char fmt[512]; \
+    snprintf(fmt, sizeof fmt, #x " = %s\n", FMTSPEC(x)); \
+    printf(fmt, (x)); \
+} while(0)
+
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define ARRAY_LEN(arr) sizeof(arr) / sizeof(arr[0])

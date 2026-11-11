@@ -39,6 +39,7 @@ int main(){
         printf(STR_Fmt"\n", (int)STR_Arg(word));
         word_count += 1;
     }
+    PRINT_VAL(10);
     printf("word_count = %zu\n", word_count);
     arena_destroy(arena);
     return 0;
