@@ -2,6 +2,8 @@
 #define STR_IMPLEMENTATION
 #include "fylib.h"
 
+//EXAMPLE FILE
+
 int main(){
     mem_arena *arena = arena_create(MiB(2));
     char *content = arena_push(arena, 1024, false);
