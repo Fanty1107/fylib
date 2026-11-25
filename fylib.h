@@ -82,7 +82,7 @@ void arena_pop_to(mem_arena *arena, u64 pos);
 
 u64 arena_get_pos(mem_arena *arena);
 
-#ifdef FYLIB_ARENA_IMPLEMENTATION
+#ifdef ARENA_IMPLEMENTATION
 
 mem_arena* arena_create(u64 capacity){
     mem_arena* arena = (mem_arena*) malloc(capacity);
@@ -139,7 +139,7 @@ string_view str_chop_by_type(string_view *s, int (*istype)(int c));
 #define STR_Fmt "%.*s"
 #define STR_Arg(s) (s).count, (s).data
 
-#ifdef FYLIB_STR_IMPLEMENTATION
+#ifdef STR_IMPLEMENTATION
 string_view str_from_cstr(char *cstr){
     if(cstr == NULL){
         return (string_view){
@@ -230,6 +230,77 @@ string_view str_chop_by_type(string_view *sv, int (*istype)(int c))
     return result;
 }
 #endif
+//String with 8bytes
+
+typedef struct{
+    u8 *text;
+    size_t len;
+}String8;
+#ifdef STR_IMPLEMENTATION
+String8 init_string(const char *cstr){
+    size_t len = strlen(cstr);
+    u8 *buf = NULL;
+    if(len > 0){
+        buf = (u8*)malloc(len);
+        if(buf == NULL) return (String8){0};
+        memcpy(buf,cstr,len);
+    }
+    return (String8){
+        .text = buf,
+        .len = len,
+    }; 
+}
+void append_str(String8 *str, const char *cstr){
+    if(str == NULL || cstr == NULL) return;
+    if(str->text == NULL){
+        u8 *buf = (u8*)malloc(strlen(cstr));
+        if(buf == NULL) return;
+        memcpy(buf, cstr, strlen(cstr));
+        str->text = buf;
+        str->len = strlen(cstr);
+        return;
+    }
+    size_t len_c = strlen(cstr);
+    if(len_c == 0) return;
+    size_t origin_len = str->len;
+
+    u8 *new_str = (u8 *)realloc(str->text, (str->len + len_c));
+    if(new_str == NULL)return;
+
+    memcpy(new_str + origin_len, cstr, len_c);
+    str->text = new_str;
+    str->len = origin_len + len_c;
+}
+void print_str(String8 *str){
+    for(size_t i = 0; i < str->len; ++i){
+        printf("%c", str->text[i]);
+    }
+    printf("\n");
+}
+void free_str(String8 *str){
+    if(str == NULL) return;
+    free(str->text);
+}
+bool compare(String8 *str1, String8 *str2){
+    if (str1 == NULL || str2 == NULL) return false;
+    if (str1->len != str2->len) return false;
+    if (str1->len == 0) return true;
+    if (str1->text == NULL || str2->text == NULL) return false;
+
+    for (size_t i = 0; i < str1->len; ++i) {
+        if (str1->text[i] != str2->text[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+char* to_cstr(String8 *str){
+    if(str == NULL) return 0;
+    return (char *)str->text;
+}
+#endif//String8 implemetation
+
+
 //data structs:
 
 typedef struct{

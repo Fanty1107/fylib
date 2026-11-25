@@ -1,5 +1,5 @@
-#define FYLIB_ARENA_IMPLEMENTATION
-#define FYLIB_STR_IMPLEMENTATION
+#define ARENA_IMPLEMENTATION
+#define STR_IMPLEMENTATION
 #include "fylib.h"
 
 int main(){
@@ -11,6 +11,11 @@ int main(){
         return -1;
     }
     printf("%s", content);
+
+    String8 hello = init_string("Hello world");
+    String8 str2 = init_string("Hella Woasd");
+    if(compare(&hello, &str2)) printf("Equals\n");
+    print_str(&hello);
 
 
     int *number = NULL;
